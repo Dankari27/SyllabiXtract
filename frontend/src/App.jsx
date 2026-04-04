@@ -36,7 +36,7 @@ function App() {
 
     try {
       // NOTE: Replace this URL with the actual Render backend URL once deployed
-      const response = await fetch('http://127.0.0.1:8000/upload', {
+      const response = await fetch('https://syllabixtract-api.onrender.com/upload', {
         method: 'POST',
         body: formData,
       });
