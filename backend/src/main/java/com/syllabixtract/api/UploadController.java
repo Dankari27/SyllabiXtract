@@ -10,7 +10,6 @@ import org.springframework.web.multipart.MultipartFile;
 import java.util.HashMap;
 import java.util.Map;
 
-@CrossOrigin(origins = { "http://localhost:5173", "https://syllabi-xtract.vercel.app/" })
 @RestController // This is the CORS VIP pass for the React frontend
 public class UploadController {
 
