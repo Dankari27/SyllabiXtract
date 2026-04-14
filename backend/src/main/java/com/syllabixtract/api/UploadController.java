@@ -8,11 +8,10 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
-@RestController
-@CrossOrigin(origins = "*") // This is the CORS VIP pass for the React frontend
+@CrossOrigin(origins = { "http://localhost:5173", "https://syllabi-xtract.vercel.app/" })
+@RestController // This is the CORS VIP pass for the React frontend
 public class UploadController {
 
     // TODO: Phase 2 - Inject the Services here.
@@ -80,7 +79,7 @@ public class UploadController {
             response.put("status", "success");
             response.put("filename", file.getOriginalFilename());
             response.put("message", "File processed successfully by the AI Pipeline!");
-            response.put("events", scheduleData); // Replaced mock_events with the real data!
+            response.put("events", scheduleData); // Replaced mock_events with the real data
 
             return ResponseEntity.ok(response);
 
