@@ -21,7 +21,7 @@ public class GeminiService {
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     public String extractScheduleAsJson(String rawSyllabusText) throws Exception {
-        String url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key="
+        String url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key="
                 + geminiApiKey;
 
         // 1. Write the Prompt
