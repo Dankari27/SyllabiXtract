@@ -24,11 +24,25 @@ public class GeminiService {
         String url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key="
                 + geminiApiKey;
 
-        // 1. Write the Prompt
-        String prompt = "You are a highly accurate academic assistant. Read the following syllabus text and extract every assignment, quiz, exam, and project. "
+        // 1. Write the Prompt (Adjust this prompt if we want llama parse to extract
+        // more stuff in a specific format)
+        String prompt = "You are an expert academic data extractor. Read the following syllabus text and extract the key information. "
                 +
-                "Return the data as a strict JSON array of objects with 'title' and 'date' (Format: YYYY-MM-DD). Do not include any other text or markdown.\n\n"
+                "Return the data STRICTLY as a single JSON object matching this exact structure structure. Do not include any markdown backticks:\n"
                 +
+                "{\n" +
+                "  \"courseName\": \"Extract the course code and name (e.g., COSC 412 Software Engineering)\",\n" +
+                "  \"professor\": \"Extract the instructor's name\",\n" +
+                "  \"officeHours\": \"Extract the office hours and location\",\n" +
+                "  \"gradingScale\": [\n" +
+                "    {\"grade\": \"A\", \"range\": \"95-100\"}\n" + // Instructs it to make an array of the grading
+                                                                    // scale
+                "  ],\n" +
+                "  \"schedule\": [\n" +
+                "    {\"title\": \"Event name\", \"date\": \"YYYY-MM-DD\", \"type\": \"Categorize as Exam, Assignment, Project, or Other\"}\n"
+                +
+                "  ]\n" +
+                "}\n\n" +
                 "Syllabus Text:\n" + rawSyllabusText;
 
         // 2. Build the Gemini JSON Request
