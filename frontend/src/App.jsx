@@ -1,5 +1,11 @@
-import React, { useState } from 'react';
-
+import React, { useState, useEffect } from 'react';
+import useTheme from './hooks/useTheme';
+import ThemeToggle from './components/ThemeToggle';
+import LandingPage from './components/LandingPage';
+import AuthCard from './components/AuthCard';
+import ProfileDropdown from './components/ProfileDropdown';
+import UploadCard from './components/UploadCard';
+import ResultsPanel from './components/ResultsPanel';
 /**
  * SyllabiXtract Starter Template
  * This component handles:
@@ -8,10 +14,24 @@ import React, { useState } from 'react';
  * 3. Displaying the raw JSON response from Vercel
  */
 function App() {
+  const [authMode, setAuthMode] = useState('login');
+  const { darkMode, toggleTheme } = useTheme();
+  const [userName, setUserName] = useState(""); 
+  const [displayProfileDropdown, setdisplayProfileDropdown] = useState(false); 
+  const [activePage, setactivePage] = useState('landing');
   const [file, setFile] = useState(null);
-  const [isUploading, setIsUploading] = useState(false);
+  const [uploadStatus, setUploadStatus] = useState(false);
   const [extractedData, setExtractedData] = useState(null);
 
+  useEffect(() => {
+    const savedName = localStorage.getItem('sx_userName');
+    if (savedName) {
+      setUserName(savedName);
+      setExtractedData(null);
+      setFile(null);
+      setactivePage('app');
+    }
+  }, []);
   // 1. Capture the file from the input
   const handleFileChange = (event) => {
     const selectedFile = event.target.files[0];
@@ -29,12 +49,13 @@ function App() {
       return;
     }
 
-    setIsUploading(true);
+    setUploadStatus(true);
 
     const formData = new FormData();
     formData.append('file', file);
 
     try {
+
       // This url allows render to deploy the backend.
       const response = await fetch('https://syllabixtract-api.onrender.com/upload', {
         method: 'POST',
@@ -49,119 +70,147 @@ function App() {
       console.error("Upload Error:", error);
       alert("Failed to reach the backend. Is your Render server awake?");
     } finally {
-      setIsUploading(false);
+      setUploadStatus(false);
     }
   };
 
+  // Function call for successful login, sets uer info and navigation
+  function processLogin(name) {
+    localStorage.setItem('sx_userName', name);
+    localStorage.setItem('sx_displayName', name);
+    setExtractedData(null);
+    setFile(null);
+    setUserName(name);
+    setactivePage('app');
+  }
+
+  // Function call for clearing user data and reseting activePage or state
+  function resetUserSession() {
+    localStorage.removeItem('sx_userName');
+    setUserName("");
+    setactivePage('landing');
+    setdisplayProfileDropdown(false);
+    setExtractedData(null);
+    setFile(null);
+  }
+  // Function call for reseting file input and clearing file state
+  function removeSelectedFile() {
+    setFile(null);
+    // This resets the actual file input so the same file can be re-selected
+    const input = document.getElementById('file-input');
+    if (input) input.value = '';
+  }
   return (
-    <div style={styles.container}>
-      <header style={styles.header}>
-        <h1 style={styles.title}>SyllabiXtract</h1>
-        <p>Convert your messy syllabus into an organized calendar in seconds.</p>
-      </header>
+    <div className="min-h-screen w-full relative flex flex-col items-center font-sans overflow-x-hidden">
 
-      <main style={styles.uploadCard}>
-        <div style={styles.dropZone}>
-          <input 
-            type="file" 
-            accept=".pdf" 
-            onChange={handleFileChange} 
-            style={styles.fileInput}
+
+      {/* Layer for contnet */}
+      <div className="relative z-10 w-full flex flex-col items-center py-12 px-4">
+
+        {/* Controls current view of the app landing page*/}
+        {activePage === 'landing' && (
+          <>
+            {/* Top-right Log In button */}
+            <div className="absolute top-4 right-4 z-50">
+              <button
+                onClick={() => {
+                  setAuthMode('login');
+                  setactivePage('auth');
+                }}
+                className={`font-semibold px-6 py-2 rounded-full border transition
+          ${darkMode
+                    ? 'border-white text-white hover:bg-white/10'
+                    : 'border-slate-800 text-slate-800 hover:bg-slate-100'
+                  }`}
+              >
+                Log In
+              </button>
+            </div>
+
+            <LandingPage
+              darkMode={darkMode}
+              onGetStarted={() => {
+                setAuthMode('signup');
+                setactivePage('auth');
+              }}
+            />
+          </>
+        )}
+
+        {/* Controls current view of the app authentication page*/}
+        {activePage === 'auth' && (
+          <AuthCard
+            darkMode={darkMode}
+            initialMode={authMode}
+            handleLogin={processLogin}
+            returnToLanding={() => setactivePage('landing')}
           />
-          <p style={styles.fileHint}>
-            {file ? `Selected: ${file.name}` : "Click to select your syllabus PDF"}
-          </p>
-        </div>
+        )}
 
-        <button 
-          onClick={handleUpload} 
-          disabled={isUploading}
-          style={{
-            ...styles.button,
-            backgroundColor: isUploading ? '#ccc' : '#007bff'
-          }}
-        >
-          {isUploading ? 'Processing with Gemini...' : 'Extract Schedule'}
-        </button>
-      </main>
+        {/* Controls current view of the main upload dashboard*/}
+        {activePage === 'app' && (
+          <div className="w-full flex flex-col items-center animate-in fade-in duration-500">
 
-      {/* Preview Section: This is where we'll later build the visual calendar */}
-      {extractedData && (
-        <section style={styles.resultsSection}>
-          <h3>Extracted Schedule Data</h3>
-          <pre style={styles.jsonPreview}>
-            {JSON.stringify(extractedData, null, 2)}
-          </pre>
-        </section>
-      )}
+            <ProfileDropdown
+              darkMode={darkMode}
+              userName={userName}
+              displayProfileDropdown={displayProfileDropdown}
+              setdisplayProfileDropdown={setdisplayProfileDropdown}
+              resetUserSession={resetUserSession}
+            />
+
+            <header className="text-center w-full max-w-2xl mb-10">
+              <h1 className="text-5xl font-black text-blue-500 tracking-tighter mb-3">
+                SyllabiXtract
+              </h1>
+              <p className={`text-lg font-medium max-w-md text-center leading-relaxed mx-auto
+                ${darkMode ? 'text-slate-400' : 'text-slate-500'}`}>
+                Convert your messy syllabus into an organized calendar in seconds.
+              </p>
+            </header>
+
+            <UploadCard
+              darkMode={darkMode}
+              file={file}
+              uploadStatus={uploadStatus}
+              onFileChange={handleFileChange}
+              onUpload={handleUpload}
+              onremoveSelectedFile={removeSelectedFile}  // ← add this
+            />
+
+            <ResultsPanel darkMode={darkMode} data={extractedData} />
+
+            <button
+              onClick={() => setactivePage('landing')}
+              className={`mt-8 font-bold transition-colors
+                ${darkMode ? 'text-slate-500 hover:text-blue-400' : 'text-slate-400 hover:text-blue-500'}`}
+            >
+              ← Back to Landing Page
+            </button>
+          </div>
+        )}
+
+      </div>
+
+      {/* Page background adapts to theme:
+      - Light mode has radial gradient
+      - Dark mode has solid slate */}
+      <div
+        className="absolute inset-0 z-0 transition-colors duration-500"
+        style={{
+          backgroundImage: darkMode
+            ? 'none'
+            : `radial-gradient(125% 125% at 50% 10%, #ffffff 40%, #f59e0b 100%)`,
+          backgroundColor: darkMode ? '#0f172a' : 'transparent',
+          backgroundSize: '100% 100%',
+        }}
+      />
+
+      {/* A Floating theme toggle that will always be visible in each page */}
+      <ThemeToggle darkMode={darkMode} switchTheme={toggleTheme} />
+
     </div>
   );
 }
-
-// Some basic Styles
-const styles = {
-  container: {
-    maxWidth: '800px',
-    margin: '40px auto',
-    padding: '0 20px',
-    fontFamily: 'system-ui, sans-serif',
-    color: '#333'
-  },
-  header: {
-    textAlign: 'center',
-    marginBottom: '40px'
-  },
-  title: {
-    fontSize: '2.5rem',
-    color: '#007bff',
-    marginBottom: '10px'
-  },
-  uploadCard: {
-    background: '#f9f9f9',
-    padding: '30px',
-    borderRadius: '12px',
-    boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
-    textAlign: 'center'
-  },
-  dropZone: {
-    border: '2px dashed #007bff',
-    padding: '40px',
-    borderRadius: '8px',
-    marginBottom: '20px',
-    backgroundColor: '#fff',
-    cursor: 'pointer'
-  },
-  fileInput: {
-    marginBottom: '10px'
-  },
-  fileHint: {
-    fontSize: '0.9rem',
-    color: '#666'
-  },
-  button: {
-    padding: '12px 24px',
-    fontSize: '1rem',
-    color: '#fff',
-    border: 'none',
-    borderRadius: '6px',
-    cursor: 'pointer',
-    transition: 'background-color 0.2s'
-  },
-  resultsSection: {
-    marginTop: '40px',
-    padding: '20px',
-    backgroundColor: '#fff',
-    border: '1px solid #ddd',
-    borderRadius: '8px'
-  },
-  jsonPreview: {
-    fontSize: '0.85rem',
-    backgroundColor: '#2d2d2d',
-    color: '#f8f8f2',
-    padding: '15px',
-    borderRadius: '6px',
-    overflowX: 'auto'
-  }
-};
 
 export default App;
