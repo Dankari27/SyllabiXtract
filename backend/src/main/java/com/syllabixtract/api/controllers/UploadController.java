@@ -1,6 +1,8 @@
-package com.syllabixtract.api;
+package com.syllabixtract.api.controllers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.syllabixtract.api.services.GeminiService;
+import com.syllabixtract.api.services.LlamaParseService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

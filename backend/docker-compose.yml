@@ -1,0 +1,11 @@
+services:
+
+  db:
+    image: postgres
+    ports:
+      - "5436:5432"
+    restart: always
+    environment:
+      POSTGRES_DB: myapp
+      POSTGRES_USER: dev
+      POSTGRES_PASSWORD: dev

@@ -1,4 +1,4 @@
-package com.syllabixtract.api;
+package com.syllabixtract.api.services;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;

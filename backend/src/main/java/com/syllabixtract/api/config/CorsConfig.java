@@ -1,4 +1,4 @@
-package com.syllabixtract.api;
+package com.syllabixtract.api.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
