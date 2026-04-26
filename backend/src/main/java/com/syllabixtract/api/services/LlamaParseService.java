@@ -69,6 +69,11 @@ public class LlamaParseService {
                 String.class);
 
         JsonNode resultNode = objectMapper.readTree(resultResponse.getBody());
-        return resultNode.get("markdown").asText();
+        String markdown = resultNode.get("markdown").asText();
+
+        // DEBUG LOG - Crucial for finding out if the PDF was read correctly
+        System.out.println("DEBUG: LlamaParse finished. Extracted " + markdown.length() + " characters of text.");
+
+        return markdown;
     }
 }

@@ -21,48 +21,47 @@ public class GeminiService {
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     public String extractScheduleAsJson(String rawSyllabusText) throws Exception {
-        String url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key="
+        // Keeping your 2.0-flash model selection
+        String url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key="
                 + geminiApiKey;
 
-        // 1. Write the Prompt (Adjust this prompt if we want llama parse to extract
-        // more stuff in a specific format)
-        String prompt = "You are an expert academic data extractor. Read the following syllabus text and extract the key information. "
-                +
-                "Return the data STRICTLY as a single JSON object matching this exact structure structure. Do not include any markdown backticks:\n"
-                +
-                "{\n" +
-                "  \"courseName\": \"Extract the course code and name (e.g., COSC 412 Software Engineering)\",\n" +
-                "  \"professor\": \"Extract the instructor's name\",\n" +
-                "  \"officeHours\": \"Extract the office hours and location\",\n" +
-                "  \"gradingScale\": [\n" +
-                "    {\"grade\": \"A\", \"range\": \"95-100\"}\n" + // Instructs it to make an array of the grading
-                                                                    // scale
-                "  ],\n" +
-                "  \"schedule\": [\n" +
-                "    {\"title\": \"Event name\", \"date\": \"YYYY-MM-DD\", \"type\": \"Categorize as Exam, Assignment, Project, or Other\"}\n"
-                +
+        // UPDATED PROMPT: More aggressive keyword matching
+        String prompt = "You are a master academic data extractor. Read the syllabus text below and find EVERY date-related assignment, exam, quiz, and project. "
+                + "Return the data STRICTLY as a single JSON object. Use YYYY-MM-DD for dates. If the year is missing, assume 2026. "
+                + "Search for keywords like 'Due', 'Exam', 'Assignment', 'Project', 'Deadline', 'Test', 'Quiz'. "
+                + "If no date is found for a specific item, estimate it based on the surrounding text. "
+                + "Return ONLY raw JSON, no markdown backticks:\n"
+                + "{\n" +
+                "  \"course_code\": \"e.g. COSC 412\",\n" +
+                "  \"course_name\": \"e.g. Software Engineering\",\n" +
+                "  \"deadlines\": [\n" +
+                "    {\n" +
+                "      \"title\": \"Name of assignment or exam\",\n" +
+                "      \"description\": \"Brief details or specific notes for this entry\",\n" +
+                "      \"due_date\": \"YYYY-MM-DD\",\n" +
+                "      \"due_time\": \"HH:mm:ss or null\"\n" +
+                "    }\n" +
                 "  ]\n" +
                 "}\n\n" +
                 "Syllabus Text:\n" + rawSyllabusText;
 
-        // 2. Build the Gemini JSON Request
         Map<String, Object> textPart = Map.of("text", prompt);
         Map<String, Object> parts = Map.of("parts", List.of(textPart));
         Map<String, Object> requestBody = new HashMap<>();
         requestBody.put("contents", List.of(parts));
-
-        // Force pure JSON response
         requestBody.put("generationConfig", Map.of("responseMimeType", "application/json"));
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         HttpEntity<Map<String, Object>> entity = new HttpEntity<>(requestBody, headers);
 
-        // 3. Send to Google
         ResponseEntity<String> response = restTemplate.postForEntity(url, entity, String.class);
-
-        // 4. Parse the response to get the actual text
         JsonNode rootNode = objectMapper.readTree(response.getBody());
-        return rootNode.path("candidates").get(0).path("content").path("parts").get(0).path("text").asText();
+        String result = rootNode.path("candidates").get(0).path("content").path("parts").get(0).path("text").asText();
+
+        // DEBUG: See what the AI is actually thinking
+        System.out.println("DEBUG: Gemini Raw JSON Output: " + result);
+
+        return result;
     }
 }
