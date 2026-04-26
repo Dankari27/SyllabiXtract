@@ -3,19 +3,55 @@ import { format, startOfMonth, endOfMonth, startOfWeek, endOfWeek, eachDayOfInte
 import { Maximize2, X, ChevronLeft, ChevronRight, Save, Download, Trash2, Calendar as CalIcon, GripVertical } from 'lucide-react';
 import { createEvents } from 'ics';
 
+// Atmospheric Starfield Component
+const Starfield = ({ darkMode }) => {
+  // Generate 50 random stars once on mount
+  const [stars] = useState(() => 
+    Array.from({ length: 50 }).map(() => ({
+      id: Math.random(),
+      top: `${Math.random() * 100}%`,
+      left: `${Math.random() * 100}%`,
+      size: `${Math.random() * 2 + 1}px`, // 1px to 3px
+      delay: `${Math.random() * 4}s`,
+      duration: `${Math.random() * 3 + 2}s`, // 2s to 5s
+    }))
+  );
+
+  if (!darkMode) return null; // Only render stars in dark mode
+
+  return (
+    <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
+      {stars.map((star) => (
+        <div
+          key={star.id}
+          className="absolute rounded-full bg-white animate-pulse"
+          style={{
+            top: star.top,
+            left: star.left,
+            width: star.size,
+            height: star.size,
+            animationDelay: star.delay,
+            animationDuration: star.duration,
+            opacity: 0.7,
+          }}
+        />
+      ))}
+      {/* Subtle deep space radial gradient */}
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-blue-900/20 via-slate-900/40 to-transparent"></div>
+    </div>
+  );
+};
+
 export default function SyllabusCalendar({ data, darkMode }) {
   const [editedData, setEditedData] = useState(data);
   const [isExpanded, setIsExpanded] = useState(false);
   
-  // Calendar State
   const [currentDate, setCurrentDate] = useState(new Date());
   
-  // Editing & Dragging State
   const [editingIndex, setEditingIndex] = useState(null);
   const [draggedIdx, setDraggedIdx] = useState(null);
   const [dragOverDate, setDragOverDate] = useState(null);
 
-  // Sync data on initial load
   useEffect(() => {
     if (data) {
       setEditedData(data);
@@ -27,7 +63,7 @@ export default function SyllabusCalendar({ data, darkMode }) {
 
   if (!editedData) return null;
 
-  // --- Logic Handlers ---
+  // --- Handlers ---
   const handleInputChange = (field, value) => {
     const updatedDeadlines = [...editedData.deadlines];
     updatedDeadlines[editingIndex][field] = value;
@@ -40,7 +76,6 @@ export default function SyllabusCalendar({ data, darkMode }) {
     setEditingIndex(null);
   };
 
-  // --- Drag and Drop Handlers ---
   const handleDragStart = (e, originalIndex) => {
     setDraggedIdx(originalIndex);
     e.dataTransfer.effectAllowed = "move"; 
@@ -48,9 +83,7 @@ export default function SyllabusCalendar({ data, darkMode }) {
 
   const handleDragOver = (e, dateStr) => {
     e.preventDefault();
-    if (dragOverDate !== dateStr) {
-      setDragOverDate(dateStr);
-    }
+    if (dragOverDate !== dateStr) setDragOverDate(dateStr);
   };
 
   const handleDragLeave = (e) => {
@@ -61,7 +94,6 @@ export default function SyllabusCalendar({ data, darkMode }) {
   const handleDrop = (e, targetDateStr) => {
     e.preventDefault();
     setDragOverDate(null);
-    
     if (draggedIdx === null) return;
 
     const updatedDeadlines = [...editedData.deadlines];
@@ -70,7 +102,6 @@ export default function SyllabusCalendar({ data, darkMode }) {
     setDraggedIdx(null);
   };
 
-  // --- Export ---
   const downloadICS = () => {
     const validEvents = (editedData.deadlines || []).filter(d => d.due_date && d.due_date.includes('-'));
     const events = validEvents.map(d => {
@@ -109,16 +140,14 @@ export default function SyllabusCalendar({ data, darkMode }) {
     }
   });
 
-  // --- Theming & Glassmorphism ---
+  // --- Theming & Scrollbars ---
   const textMain = darkMode ? 'text-white' : 'text-slate-800';
   const textMuted = darkMode ? 'text-slate-300' : 'text-slate-600';
   
-  // Frosted glass background for the main containers
   const bgGlass = darkMode 
     ? 'bg-slate-900/60 backdrop-blur-2xl border-slate-700/50 shadow-[0_8px_32px_0_rgba(0,0,0,0.5)]' 
     : 'bg-white/60 backdrop-blur-2xl border-white/60 shadow-[0_8px_32px_0_rgba(31,38,135,0.1)]';
 
-  // Inside the calendar grid cells
   const bgDay = darkMode 
     ? 'bg-slate-800/40 hover:bg-slate-700/60 border-slate-700/50' 
     : 'bg-white/50 hover:bg-white/80 border-slate-200/50';
@@ -126,12 +155,13 @@ export default function SyllabusCalendar({ data, darkMode }) {
     ? 'bg-slate-900/30 text-slate-500 border-slate-800/50' 
     : 'bg-slate-100/30 text-slate-400 border-slate-200/30';
   
-  // Custom modern scrollbar
-  const scrollbarClasses = `
-    [&::-webkit-scrollbar]:w-1.5 
+  // Applied to both the main grid wrapper and the individual day boxes
+  const modernScrollbar = `
+    [&::-webkit-scrollbar]:w-2
     [&::-webkit-scrollbar-track]:bg-transparent 
     [&::-webkit-scrollbar-thumb]:rounded-full 
-    ${darkMode ? '[&::-webkit-scrollbar-thumb]:bg-slate-600/50' : '[&::-webkit-scrollbar-thumb]:bg-slate-300/80'}
+    ${darkMode ? '[&::-webkit-scrollbar-thumb]:bg-slate-600/50 hover:[&::-webkit-scrollbar-thumb]:bg-slate-500/80' 
+               : '[&::-webkit-scrollbar-thumb]:bg-slate-300/80 hover:[&::-webkit-scrollbar-thumb]:bg-slate-400/80'}
   `;
 
   // VIEW 1: THE MINI PREVIEW
@@ -139,9 +169,11 @@ export default function SyllabusCalendar({ data, darkMode }) {
     return (
       <div 
         onClick={() => setIsExpanded(true)}
-        className={`w-full max-w-2xl mt-8 rounded-3xl border cursor-pointer transition-all duration-300 hover:scale-[1.02] overflow-hidden group ${bgGlass}`}
+        className={`w-full max-w-2xl mt-8 rounded-3xl border cursor-pointer transition-all duration-300 hover:scale-[1.02] overflow-hidden group relative ${bgGlass}`}
       >
-        <div className={`p-5 border-b flex justify-between items-center ${darkMode ? 'border-slate-700/50 bg-slate-800/30' : 'border-white/40 bg-white/40'}`}>
+        <Starfield darkMode={darkMode} />
+        
+        <div className={`relative z-10 p-5 border-b flex justify-between items-center ${darkMode ? 'border-slate-700/50 bg-slate-800/30' : 'border-white/40 bg-white/40'}`}>
           <div>
             <h3 className={`font-black flex items-center gap-2 text-lg ${textMain}`}>
               <CalIcon size={20} className="text-blue-500 drop-shadow-sm" />
@@ -154,7 +186,7 @@ export default function SyllabusCalendar({ data, darkMode }) {
           </div>
         </div>
         
-        <div className="p-6 pointer-events-none">
+        <div className="relative z-10 p-6 pointer-events-none">
           <div className="text-center font-black tracking-tight mb-4 text-blue-500/90 drop-shadow-sm text-lg">
             {format(currentDate, 'MMMM yyyy')}
           </div>
@@ -183,11 +215,12 @@ export default function SyllabusCalendar({ data, darkMode }) {
   // VIEW 2: THE FULL CALENDAR MODAL
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-in fade-in duration-300">
-      <div className={`w-full max-w-6xl h-[90vh] flex flex-col rounded-[2.5rem] overflow-hidden ring-1 ring-white/20 ${bgGlass}`}>
+      <div className={`relative w-full max-w-6xl h-[90vh] flex flex-col rounded-[2.5rem] overflow-hidden ring-1 ring-white/20 ${bgGlass}`}>
         
+        <Starfield darkMode={darkMode} />
+
         {/* Artistic Glass Header */}
-        <div className={`p-6 border-b flex justify-between items-center relative overflow-hidden ${darkMode ? 'border-slate-700/50' : 'border-white/50'}`}>
-          {/* Subtle background glow inside the header */}
+        <div className={`relative z-10 p-6 border-b flex justify-between items-center overflow-hidden ${darkMode ? 'border-slate-700/50' : 'border-white/50'}`}>
           <div className={`absolute inset-0 opacity-20 bg-gradient-to-r ${darkMode ? 'from-blue-500 to-purple-600' : 'from-blue-400 to-purple-500'}`}></div>
           
           <div className="relative z-10 drop-shadow-sm">
@@ -195,7 +228,6 @@ export default function SyllabusCalendar({ data, darkMode }) {
             <p className={`font-bold text-blue-600/90 dark:text-blue-400 mt-1`}>{editedData.course_name}</p>
           </div>
 
-          {/* Month Navigation - Frosted Pill */}
           <div className={`flex items-center gap-6 relative z-10 backdrop-blur-md px-4 py-2 rounded-2xl ring-1 shadow-sm ${darkMode ? 'bg-slate-800/50 ring-white/10' : 'bg-white/50 ring-black/5'}`}>
             <button onClick={() => setCurrentDate(subMonths(currentDate, 1))} className={`p-1.5 rounded-full hover:bg-slate-500/20 transition-colors ${textMain}`}>
               <ChevronLeft size={24} />
@@ -213,8 +245,8 @@ export default function SyllabusCalendar({ data, darkMode }) {
           </button>
         </div>
 
-        {/* Calendar Grid Container */}
-        <div className={`flex-1 overflow-y-auto p-6 ${darkMode ? 'bg-slate-900/20' : 'bg-slate-50/20'}`}>
+        {/* Calendar Grid Container (Now with the modern scrollbar) */}
+        <div className={`relative z-10 flex-1 overflow-y-auto p-6 pr-4 ${modernScrollbar} ${darkMode ? 'bg-slate-900/40' : 'bg-slate-50/20'}`}>
           <div className="grid grid-cols-7 gap-3 h-full">
             {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day, i) => (
               <div key={i} className={`text-center font-black uppercase tracking-widest text-xs mb-1 drop-shadow-sm ${textMuted}`}>{day}</div>
@@ -233,9 +265,9 @@ export default function SyllabusCalendar({ data, darkMode }) {
                   onDragOver={(e) => handleDragOver(e, dateStr)}
                   onDragLeave={handleDragLeave}
                   onDrop={(e) => handleDrop(e, dateStr)}
-                  className={`min-h-[120px] rounded-2xl border flex flex-col transition-all duration-300 overflow-hidden backdrop-blur-sm
+                  className={`min-h-[120px] rounded-2xl border flex flex-col transition-all duration-300 overflow-hidden backdrop-blur-md
                     ${isCurrentMonth ? bgDay : bgDayNotMonth}
-                    ${isToday ? 'ring-2 ring-blue-500/80 shadow-lg shadow-blue-500/20 bg-blue-500/5' : ''}
+                    ${isToday ? 'ring-2 ring-blue-500/80 shadow-lg shadow-blue-500/20 bg-blue-500/10' : ''}
                     ${isDragTarget ? 'ring-2 ring-purple-500 bg-purple-500/20 scale-[1.02] shadow-xl' : ''}
                   `}
                 >
@@ -246,8 +278,7 @@ export default function SyllabusCalendar({ data, darkMode }) {
                     {format(day, 'd')}
                   </div>
                   
-                  {/* Event Badges Container */}
-                  <div className={`flex-1 space-y-2 overflow-y-auto p-2 pt-0 ${scrollbarClasses}`}>
+                  <div className={`flex-1 space-y-2 overflow-y-auto p-2 pt-0 ${modernScrollbar}`}>
                     {dayEvents.map((evt, idx) => (
                       <div 
                         key={idx}
@@ -277,8 +308,8 @@ export default function SyllabusCalendar({ data, darkMode }) {
 
         {/* Edit Event Glass Popover */}
         {editingIndex !== null && (
-          <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/20 backdrop-blur-md animate-in fade-in duration-200">
-            <div className={`w-full max-w-md p-7 rounded-[2rem] shadow-2xl border ring-1 ring-white/20 animate-in zoom-in-95 duration-200 ${darkMode ? 'bg-slate-900/80 backdrop-blur-2xl border-slate-700/50' : 'bg-white/80 backdrop-blur-2xl border-white/60'}`}>
+          <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-md animate-in fade-in duration-200">
+            <div className={`w-full max-w-md p-7 rounded-[2rem] shadow-2xl border ring-1 ring-white/20 animate-in zoom-in-95 duration-200 ${darkMode ? 'bg-slate-900/90 backdrop-blur-3xl border-slate-700/50' : 'bg-white/90 backdrop-blur-3xl border-white/60'}`}>
               <div className="flex justify-between items-center mb-6">
                 <h3 className={`text-xl font-black ${textMain}`}>Edit Event</h3>
                 <button onClick={() => setEditingIndex(null)} className="p-2 hover:bg-slate-500/20 rounded-full transition-colors text-slate-400"><X size={20}/></button>
@@ -288,7 +319,7 @@ export default function SyllabusCalendar({ data, darkMode }) {
                 <div>
                   <label className={`block text-xs font-bold mb-1 uppercase tracking-wider ${textMuted}`}>Title</label>
                   <input 
-                    className={`w-full p-3 rounded-xl border outline-none transition-all focus:border-blue-500 focus:ring-4 ring-blue-500/20 font-bold backdrop-blur-sm ${darkMode ? 'bg-slate-800/50 border-slate-600 text-white' : 'bg-white/50 border-slate-300 text-slate-900'}`}
+                    className={`w-full p-3 rounded-xl border outline-none transition-all focus:border-blue-500 focus:ring-4 ring-blue-500/20 font-bold bg-transparent ${darkMode ? 'border-slate-600 text-white' : 'border-slate-300 text-slate-900'}`}
                     value={editedData.deadlines[editingIndex].title}
                     onChange={(e) => handleInputChange('title', e.target.value)}
                   />
@@ -297,7 +328,7 @@ export default function SyllabusCalendar({ data, darkMode }) {
                   <label className={`block text-xs font-bold mb-1 uppercase tracking-wider ${textMuted}`}>Date</label>
                   <input 
                     type="date"
-                    className={`w-full p-3 rounded-xl border outline-none transition-all focus:border-blue-500 focus:ring-4 ring-blue-500/20 font-mono backdrop-blur-sm ${darkMode ? 'bg-slate-800/50 border-slate-600 text-white [color-scheme:dark]' : 'bg-white/50 border-slate-300 text-slate-900'}`}
+                    className={`w-full p-3 rounded-xl border outline-none transition-all focus:border-blue-500 focus:ring-4 ring-blue-500/20 font-mono bg-transparent ${darkMode ? 'border-slate-600 text-white [color-scheme:dark]' : 'border-slate-300 text-slate-900'}`}
                     value={editedData.deadlines[editingIndex].due_date}
                     onChange={(e) => handleInputChange('due_date', e.target.value)}
                   />
@@ -305,7 +336,7 @@ export default function SyllabusCalendar({ data, darkMode }) {
                 <div>
                   <label className={`block text-xs font-bold mb-1 uppercase tracking-wider ${textMuted}`}>Notes</label>
                   <textarea 
-                    className={`w-full p-3 rounded-xl border outline-none transition-all focus:border-blue-500 focus:ring-4 ring-blue-500/20 h-28 resize-none custom-scrollbar backdrop-blur-sm ${darkMode ? 'bg-slate-800/50 border-slate-600 text-white' : 'bg-white/50 border-slate-300 text-slate-900'}`}
+                    className={`w-full p-3 rounded-xl border outline-none transition-all focus:border-blue-500 focus:ring-4 ring-blue-500/20 h-28 resize-none bg-transparent ${modernScrollbar} ${darkMode ? 'border-slate-600 text-white' : 'border-slate-300 text-slate-900'}`}
                     value={editedData.deadlines[editingIndex].description}
                     placeholder="Add specific details or links..."
                     onChange={(e) => handleInputChange('description', e.target.value)}
@@ -317,7 +348,7 @@ export default function SyllabusCalendar({ data, darkMode }) {
                 <button onClick={removeDeadline} className="flex items-center gap-2 text-red-500 hover:text-white font-bold px-4 py-3 rounded-xl hover:bg-red-500 transition-all border border-red-500/30">
                   <Trash2 size={18} /> Delete
                 </button>
-                <button onClick={() => setEditingIndex(null)} className="bg-blue-600/90 hover:bg-blue-500 text-white font-black px-8 py-3 rounded-xl shadow-lg shadow-blue-500/30 transition-all hover:scale-105 active:scale-95 backdrop-blur-md">
+                <button onClick={() => setEditingIndex(null)} className="bg-blue-600/90 hover:bg-blue-500 text-white font-black px-8 py-3 rounded-xl shadow-lg shadow-blue-500/30 transition-all hover:scale-105 active:scale-95">
                   Done Editing
                 </button>
               </div>
@@ -326,7 +357,7 @@ export default function SyllabusCalendar({ data, darkMode }) {
         )}
 
         {/* Modal Footer Controls */}
-        <div className={`p-6 border-t flex flex-wrap gap-4 justify-between items-center ${darkMode ? 'border-slate-700/50 bg-slate-800/40' : 'border-white/50 bg-white/40'}`}>
+        <div className={`relative z-10 p-6 border-t flex flex-wrap gap-4 justify-between items-center ${darkMode ? 'border-slate-700/50 bg-slate-800/40' : 'border-white/50 bg-white/40'}`}>
           <p className={`text-sm font-medium flex items-center gap-2 ${textMuted}`}>
             <GripVertical size={16} className="text-blue-500 drop-shadow-sm" />
             Drag and drop events to reschedule them.
