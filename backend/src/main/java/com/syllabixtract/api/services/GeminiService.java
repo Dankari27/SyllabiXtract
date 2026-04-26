@@ -21,8 +21,8 @@ public class GeminiService {
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     public String extractScheduleAsJson(String rawSyllabusText) throws Exception {
-        // Keeping your 2.0-flash model selection
-        String url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key="
+
+        String url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key="
                 + geminiApiKey;
 
         // UPDATED PROMPT: More aggressive keyword matching
@@ -49,6 +49,8 @@ public class GeminiService {
         Map<String, Object> parts = Map.of("parts", List.of(textPart));
         Map<String, Object> requestBody = new HashMap<>();
         requestBody.put("contents", List.of(parts));
+
+        // Ensure we use the structured output capability mentioned in the docs
         requestBody.put("generationConfig", Map.of("responseMimeType", "application/json"));
 
         HttpHeaders headers = new HttpHeaders();
@@ -60,7 +62,7 @@ public class GeminiService {
         String result = rootNode.path("candidates").get(0).path("content").path("parts").get(0).path("text").asText();
 
         // DEBUG: See what the AI is actually thinking
-        System.out.println("DEBUG: Gemini Raw JSON Output: " + result);
+        System.out.println("DEBUG: Gemini 2.5 Raw JSON Output: " + result);
 
         return result;
     }
