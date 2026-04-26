@@ -7,12 +7,11 @@ import App from './App.jsx'
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <Auth0Provider
-      domain="dev-evpwqsgmn03lqsfk.us.auth0.com"
-      clientId="SeOofXeNJOUQSgA7uGbBnFSgl7pJhWej"
+      domain="dev-xw5vht1v7asa2qsb.us.auth0.com"
+      clientId="lr6m3WjVxb2AjNbz8LDFSahjCszu8sED"
       authorizationParams={{
         redirect_uri: window.location.origin,
-        // This MUST match the audience in your Java backend exactly
-        audience: "https://api.syllabixtract.com" 
+        audience: "https://api.syllabixtract.com"
       }}
     >
       <App />
