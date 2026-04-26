@@ -15,7 +15,8 @@ function App() {
     user, 
     isAuthenticated, 
     isLoading, 
-    getAccessTokenSilently 
+    getAccessTokenSilently,
+    error // <--- ADD THIS HERE
   } = useAuth0();
 
   const { darkMode, toggleTheme } = useTheme();
@@ -78,8 +79,20 @@ function App() {
   }
 
   // Show a blank or loading screen while Auth0 checks the user's status
-  if (isLoading) {
+ if (isLoading) {
     return <div className={`min-h-screen w-full ${darkMode ? 'bg-[#0f172a]' : 'bg-white'}`}></div>;
+  }
+
+  // ADD THIS BLOCK:
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen p-10 text-center">
+        <h1 className="text-4xl font-black text-red-500 mb-4">Auth0 Silent Error Caught!</h1>
+        <p className="text-xl font-mono bg-red-100 text-red-800 p-4 rounded-xl border border-red-300">
+          {error.message}
+        </p>
+      </div>
+    );
   }
 
   return (
