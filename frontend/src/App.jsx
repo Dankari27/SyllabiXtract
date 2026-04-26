@@ -7,6 +7,12 @@ import ProfileDropdown from './components/ProfileDropdown';
 import UploadCard from './components/UploadCard';
 import SyllabusCalendar from './components/SyllabusCalendar';
 
+// TODO:
+// Make the main page support .doc files along with pdf.
+// IDK some other stuff when I think of it
+
+
+// Main app function for main page
 function App() {
   const { 
     loginWithRedirect, 
@@ -104,7 +110,7 @@ function App() {
     <div className="min-h-screen w-full relative flex flex-col items-center font-sans overflow-x-hidden">
       
       {/*
-        WAVY STRAND-LIKE AURORA BACKGROUND
+        WAVY STRAND-LIKE AURORA BACKGROUND (I can't for the life of me get this to work the way I want so this is good enough)
       */}
       <div className={`fixed inset-0 z-0 transition-colors duration-1000 overflow-hidden ${darkMode ? 'bg-[#050810]' : 'bg-slate-50'}`}>
         
@@ -164,7 +170,7 @@ function App() {
           }}
         />
 
-        {/* Starfield with user-requested Diamond Stars */}
+        {/* Starfield with Diamond Stars */}
         <div className="absolute inset-0 z-0 pointer-events-none select-none text-white font-serif">
           <div className="absolute text-xl" style={{ top: '15%', left: '10%', textShadow: '0 0 15px #00FFFF', animation: 'starTwinkle 4s ease-in-out infinite' }}>✦</div>
           <div className="absolute text-2xl" style={{ top: '70%', right: '12%', textShadow: '0 0 20px #00FFFF', animation: 'starTwinkle 5s ease-in-out infinite 1s' }}>✦</div>

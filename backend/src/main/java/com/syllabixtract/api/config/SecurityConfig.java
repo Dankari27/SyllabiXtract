@@ -30,7 +30,7 @@ public class SecurityConfig {
         @Bean
         public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
                 http
-                                // 1. Tell the Security Bouncer to use custom CORS rules
+                                // 1. Tell the Security policy to use custom CORS rules
                                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                                 .csrf(csrf -> csrf.disable())
                                 .authorizeHttpRequests(auth -> auth
@@ -43,7 +43,7 @@ public class SecurityConfig {
                 return http.build();
         }
 
-        // 2. The Official Guest List
+        // 2. The Whitelist for Allowed Connections
         @Bean
         public CorsConfigurationSource corsConfigurationSource() {
                 CorsConfiguration configuration = new CorsConfiguration();

@@ -25,7 +25,8 @@ public class GeminiService {
         String url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key="
                 + geminiApiKey;
 
-        // UPDATED PROMPT: More aggressive keyword matching
+        // UPDATED PROMPT: More aggressive keyword matching (Still needs changing since
+        // the data it extracts isn't consistent enough)
         String prompt = "You are a master academic data extractor. Read the syllabus text below and find EVERY date-related assignment, exam, quiz, and project. "
                 + "Return the data STRICTLY as a single JSON object. Use YYYY-MM-DD for dates. If the year is missing, assume 2026. "
                 + "Search for keywords like 'Due', 'Exam', 'Assignment', 'Project', 'Deadline', 'Test', 'Quiz'. "
@@ -61,7 +62,7 @@ public class GeminiService {
         JsonNode rootNode = objectMapper.readTree(response.getBody());
         String result = rootNode.path("candidates").get(0).path("content").path("parts").get(0).path("text").asText();
 
-        // DEBUG: See what the AI is actually thinking
+        // DEBUG: See what the AI is actually thinking (I'm sick of errors I can't see)
         System.out.println("DEBUG: Gemini 2.5 Raw JSON Output: " + result);
 
         return result;

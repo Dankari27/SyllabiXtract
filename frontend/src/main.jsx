@@ -26,7 +26,7 @@ import App from './App.jsx'
  * 1. AUTH0_DOMAIN:   (Match the groupmates Domain above)
  * 2. AUTH0_AUDIENCE: https://api.syllabixtract.com
  * * ----------------------------------------------------------------------------
- * STEP 3: AUTH0 DASHBOARD (Must be done in the target account)
+ * STEP 3: AUTH0 DASHBOARD (Must be done in the target groupmates Auth0 account)
  * 1. APPLICATIONS -> Settings: Add "http://localhost:5173, https://syllabi-xtract.vercel.app" to:
  * - Allowed Callback URLs
  * - Allowed Logout URLs
