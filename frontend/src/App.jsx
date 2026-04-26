@@ -103,22 +103,72 @@ function App() {
   return (
     <div className="min-h-screen w-full relative flex flex-col items-center font-sans overflow-x-hidden">
       
-      {/* ========================================================
-        ATMOSPHERIC AURORA BACKGROUND (Cyan & Purple)
-        ========================================================
+      {/*
+        NEW ATMOSPHERIC GLOWING & ANIMATED AURORA BACKGROUND
       */}
-      <div className={`fixed inset-0 z-0 transition-colors duration-700 ${darkMode ? 'bg-[#0a0f1c]' : 'bg-slate-50'}`}>
-        {/* Top Left Cyan Glow */}
-        <div className={`absolute top-[-10%] left-[-10%] w-[45vw] h-[45vw] rounded-full blur-[100px] pointer-events-none transition-colors duration-700
-          ${darkMode ? 'bg-cyan-900/30' : 'bg-cyan-300/40'}`} 
+      <div className={`fixed inset-0 z-0 transition-colors duration-1000 ${darkMode ? 'bg-[#0a0f1c]' : 'bg-slate-50'}`}>
+        
+        {/* Defining the animation logic natively within the component */}
+        <style>{`
+          @keyframes auroraFlow {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            33% { transform: translate(-2vw, -3vw) scale(1.05); }
+            66% { transform: translate(2vw, -1vw) scale(0.95); }
+          }
+          @keyframes auroraBlink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+          }
+        `}</style>
+        
+        {/* Top Left Cyan Aurora and Glow */}
+        <div 
+          className={`absolute rounded-full blur-[100px] pointer-events-none transition-all duration-1000
+            ${darkMode ? 'bg-cyan-900/30' : 'bg-cyan-300/40'}`} 
+          style={{
+            top: '-15%',
+            left: '-15%',
+            width: '60vw',
+            height: '60vw',
+            // Layering shadows to simulate bloom/glow
+            boxShadow: darkMode 
+              ? '0 0 50px 10px rgba(0, 255, 255, 0.2), 0 0 100px 30px rgba(0, 180, 180, 0.1)' 
+              : '0 0 40px 10px rgba(100, 255, 255, 0.4)',
+            // Combining the flowing movement with the gentle blinking
+            animation: 'auroraFlow 15s ease-in-out infinite, auroraBlink 10s ease-in-out -2s infinite',
+          }}
         />
-        {/* Top Right Purple Glow */}
-        <div className={`absolute top-[10%] right-[-10%] w-[50vw] h-[50vw] rounded-full blur-[120px] pointer-events-none transition-colors duration-700
-          ${darkMode ? 'bg-purple-900/30' : 'bg-purple-300/40'}`} 
+
+        {/* Top Right Purple Aurora and Glow */}
+        <div 
+          className={`absolute rounded-full blur-[120px] pointer-events-none transition-all duration-1000
+            ${darkMode ? 'bg-purple-900/30' : 'bg-purple-300/40'}`} 
+          style={{
+            top: '5%',
+            right: '-10%',
+            width: '65vw',
+            height: '65vw',
+            boxShadow: darkMode 
+              ? '0 0 60px 15px rgba(168, 85, 247, 0.2), 0 0 120px 40px rgba(130, 60, 190, 0.1)' 
+              : '0 0 50px 15px rgba(220, 180, 255, 0.4)',
+            animation: 'auroraFlow 18s ease-in-out -4s infinite, auroraBlink 12s ease-in-out -5s infinite',
+          }}
         />
-        {/* Bottom Blue Glow */}
-        <div className={`absolute bottom-[-10%] left-[20%] w-[50vw] h-[50vw] rounded-full blur-[120px] pointer-events-none transition-colors duration-700
-          ${darkMode ? 'bg-blue-900/20' : 'bg-blue-300/30'}`} 
+
+        {/* Bottom Blue Horizon and Glow */}
+        <div 
+          className={`absolute rounded-full blur-[120px] pointer-events-none transition-all duration-1000
+            ${darkMode ? 'bg-blue-900/20' : 'bg-blue-300/30'}`} 
+          style={{
+            bottom: '-20%',
+            left: '20%',
+            width: '65vw',
+            height: '65vw',
+            boxShadow: darkMode 
+              ? '0 0 40px 10px rgba(30, 64, 175, 0.15)' 
+              : '0 0 30px 10px rgba(150, 180, 255, 0.3)',
+            animation: 'auroraFlow 20s ease-in-out -8s infinite, auroraBlink 14s ease-in-out -8s infinite',
+          }}
         />
       </div>
 
@@ -157,7 +207,7 @@ function App() {
               resetUserSession={() => logout({ logoutParams: { returnTo: window.location.origin } })}
             />
 
-            <header className="text-center w-full max-w-2xl mb-10 mt-4">
+            <header className="text-center w-full max-w-2xl mb-10 mt-4 relative z-10">
               <h1 className="text-6xl font-black tracking-tighter mb-4 bg-gradient-to-r from-blue-500 to-purple-600 bg-clip-text text-transparent drop-shadow-sm">
                 SyllabiXtract
               </h1>
