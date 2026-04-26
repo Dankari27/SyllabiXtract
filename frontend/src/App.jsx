@@ -80,7 +80,7 @@ function App() {
   }
 
   if (isLoading) {
-    return <div className={`min-h-screen w-full ${darkMode ? 'bg-[#0f172a]' : 'bg-white'}`}></div>;
+    return <div className={`min-h-screen w-full ${darkMode ? 'bg-[#101524]' : 'bg-slate-50'}`}></div>;
   }
 
   if (error) {
@@ -104,124 +104,79 @@ function App() {
     <div className="min-h-screen w-full relative flex flex-col items-center font-sans overflow-x-hidden">
       
       {/*
-        GLOWING & ANIMATED AURORA BACKGROUND
+        WAVY AURORA BACKGROUND
+        Uses stretched ellipses to create ribbons of light.
       */}
-      <div className={`fixed inset-0 z-0 transition-colors duration-1000 ${darkMode ? 'bg-[#080c18]' : 'bg-slate-100'}`}>
+      <div className={`fixed inset-0 z-0 transition-colors duration-1000 overflow-hidden ${darkMode ? 'bg-[#0b101e]' : 'bg-slate-100'}`}>
         
         <style>{`
-          /* Large sweeping motions to make the aurora meld */
-          @keyframes sweepLeft {
-            0%, 100% { transform: translate(0, 0) scale(1); }
-            33% { transform: translate(20vw, 15vh) scale(1.2); }
-            66% { transform: translate(-10vw, 25vh) scale(0.9); }
+          @keyframes waveLeft {
+            0%, 100% { transform: rotate(-15deg) translateY(0) scaleY(1); }
+            50% { transform: rotate(-10deg) translateY(-5vh) scaleY(1.2); }
           }
-          @keyframes sweepRight {
-            0%, 100% { transform: translate(0, 0) scale(1); }
-            33% { transform: translate(-25vw, 10vh) scale(1.1); }
-            66% { transform: translate(15vw, 20vh) scale(1.3); }
+          @keyframes waveRight {
+            0%, 100% { transform: rotate(15deg) translateY(0) scaleY(1); }
+            50% { transform: rotate(20deg) translateY(5vh) scaleY(1.1); }
           }
-          @keyframes sweepBottom {
-            0%, 100% { transform: translate(0, 0) scale(1); }
-            33% { transform: translate(15vw, -30vh) scale(1.3); }
-            66% { transform: translate(-20vw, -15vh) scale(0.8); }
-          }
-          @keyframes bloomIn {
-            0% { opacity: 0; filter: blur(5px); }
-            100% { opacity: 1; filter: blur(0px); }
-          }
-          @keyframes twinkle {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.1; }
-          }
-          @keyframes coloredHalo {
-            0%, 100% { transform: scale(1); opacity: 0.7; }
-            50% { transform: scale(1.6); opacity: 0.2; }
+          @keyframes starTwinkle {
+            0%, 100% { opacity: 0.9; transform: scale(1); filter: brightness(1.2); }
+            50% { opacity: 0.2; transform: scale(0.7); filter: brightness(0.5); }
           }
         `}</style>
-        
-        {/* Main, layered central background */}
+
+        {/* Base dark/light gradient */}
         <div 
           className="absolute inset-0 z-0 pointer-events-none"
           style={{
             background: darkMode 
-              ? 'radial-gradient(125% 125% at 50% 10%, rgba(20, 200, 216, 0.4) 0%, rgba(148, 0, 211, 0.3) 40%, rgba(8, 12, 24, 0.9) 100%)'
-              : 'radial-gradient(125% 125% at 50% 10%, rgba(100, 240, 245, 0.3) 0%, rgba(200, 150, 255, 0.2) 40%, #f1f5f9 100%)',
-            backgroundSize: '100% 100%',
-            animation: 'bloomIn 1.5s ease-out',
+              ? 'radial-gradient(ellipse at top, rgba(11, 16, 30, 0) 0%, rgba(8, 12, 24, 1) 100%)'
+              : 'radial-gradient(ellipse at top, rgba(241, 245, 249, 0) 0%, rgba(226, 232, 240, 1) 100%)',
           }}
         />
 
-        {/* Layer 2: Left Sweeping Cyan Curtain with Bloom */}
+        {/* Ribbon 1: Cyan Wave (Left) */}
         <div 
-          className={`absolute rounded-full pointer-events-none transition-all duration-1000
-            ${darkMode ? 'bg-[#00FFFF]' : 'bg-[#a0f0f5]'}`} 
+          className="absolute pointer-events-none rounded-[100%]"
           style={{
-            top: '-20%',
-            left: '-20%',
-            width: '70vw',
-            height: '70vw',
-            filter: darkMode ? 'blur(40px) brightness(0.7)' : 'blur(40px) brightness(1)',
-            opacity: darkMode ? 0.3 : 0.2,
-            boxShadow: darkMode 
-              ? '0 0 50px 10px #00FFFF, 0 0 100px 30px #14C8D8, 0 0 200px 80px rgba(20, 200, 216, 0.4)'
-              : '0 0 30px 10px #14C8D8, 0 0 60px 30px rgba(100, 240, 245, 0.3)',
-            animation: 'sweepLeft 25s ease-in-out infinite, bloomIn 2s ease-out',
+            top: '20%',
+            left: '-30%',
+            width: '150vw',
+            height: '40vh',
+            background: darkMode ? 'rgba(0, 255, 255, 0.15)' : 'rgba(0, 200, 255, 0.2)',
+            filter: 'blur(90px)',
+            boxShadow: darkMode ? '0 0 100px 50px rgba(0, 255, 255, 0.1)' : 'none',
+            animation: 'waveLeft 18s ease-in-out infinite',
           }}
         />
 
-        {/* Layer 3: Right Swirling Purple Curtain with Bloom */}
+        {/* Ribbon 2: Purple Wave (Right/Center) */}
         <div 
-          className={`absolute rounded-full pointer-events-none transition-all duration-1000
-            ${darkMode ? 'bg-[#9400D3]' : 'bg-[#d8a0ff]'}`} 
+          className="absolute pointer-events-none rounded-[100%]"
           style={{
-            top: '-10%',
+            top: '35%',
             right: '-20%',
-            width: '75vw',
-            height: '75vw',
-            filter: darkMode ? 'blur(50px) brightness(0.8)' : 'blur(50px) brightness(1.2)',
-            opacity: darkMode ? 0.2 : 0.15,
-            boxShadow: darkMode 
-              ? '0 0 60px 15px #9400D3, 0 0 120px 40px #8A2BE2, 0 0 240px 90px rgba(148, 0, 211, 0.3)'
-              : '0 0 40px 15px #8A2BE2, 0 0 80px 40px rgba(200, 150, 255, 0.2)',
-            animation: 'sweepRight 30s ease-in-out infinite reverse, bloomIn 2s ease-out',
+            width: '140vw',
+            height: '45vh',
+            background: darkMode ? 'rgba(168, 85, 247, 0.18)' : 'rgba(168, 85, 247, 0.2)',
+            filter: 'blur(100px)',
+            boxShadow: darkMode ? '0 0 120px 60px rgba(168, 85, 247, 0.1)' : 'none',
+            animation: 'waveRight 22s ease-in-out infinite',
           }}
         />
 
-        {/* Layer 4: Bottom Blue Horizon Animated */}
-        <div 
-          className={`absolute rounded-full pointer-events-none transition-all duration-1000
-            ${darkMode ? 'bg-blue-800' : 'bg-blue-300'}`} 
-          style={{
-            bottom: '-30%',
-            left: '10%',
-            width: '80vw',
-            height: '80vw',
-            filter: 'blur(60px)',
-            opacity: darkMode ? 0.25 : 0.2,
-            boxShadow: darkMode 
-              ? '0 0 80px 20px rgba(30, 64, 175, 0.5)' 
-              : '0 0 60px 20px rgba(150, 180, 255, 0.4)',
-            animation: 'sweepBottom 35s ease-in-out infinite, bloomIn 2.5s ease-out',
-          }}
-        />
-
-        {/* Layer 5: Distant Twinkling Starfield with Colored Halos */}
-        <div className="absolute inset-0 z-0 pointer-events-none">
-          {/* Core + Halo pairs scattered around */}
-          <div className="absolute w-0.5 h-0.5 bg-white rounded-full" style={{ top: '15%', left: '20%', animation: 'twinkle 4s ease-in-out infinite' }} />
-          <div className="absolute w-2.5 h-2.5 rounded-full" style={{ top: '15%', left: '20%', transform: 'translate(-1px, -1px)', background: 'radial-gradient(#00FFFF, transparent 70%)', opacity: 0.7, animation: 'coloredHalo 4s ease-in-out infinite' }} />
+        {/* Layer 3: Distant Diamond Stars */}
+        <div className="absolute inset-0 z-0 pointer-events-none select-none text-white font-serif">
+          {/* Cyan Stars */}
+          <div className="absolute text-xl" style={{ top: '12%', left: '15%', textShadow: '0 0 10px #00FFFF', animation: 'starTwinkle 4s ease-in-out infinite' }}>✦</div>
+          <div className="absolute text-2xl" style={{ top: '65%', right: '15%', textShadow: '0 0 12px #00FFFF', animation: 'starTwinkle 6s ease-in-out infinite 1s' }}>✦</div>
           
-          <div className="absolute w-0.5 h-0.5 bg-white rounded-full" style={{ top: '25%', right: '30%', animation: 'twinkle 3s ease-in-out infinite 0.5s' }} />
-          <div className="absolute w-2.5 h-2.5 rounded-full" style={{ top: '25%', right: '30%', transform: 'translate(-1px, -1px)', background: 'radial-gradient(#9400D3, transparent 70%)', opacity: 0.7, animation: 'coloredHalo 3s ease-in-out infinite 0.5s' }} />
-
-          <div className="absolute w-0.5 h-0.5 bg-white rounded-full" style={{ top: '70%', left: '80%', animation: 'twinkle 5s ease-in-out infinite 1s' }} />
-          <div className="absolute w-2.5 h-2.5 rounded-full" style={{ top: '70%', left: '80%', transform: 'translate(-1px, -1px)', background: 'radial-gradient(#14C8D8, transparent 70%)', opacity: 0.7, animation: 'coloredHalo 5s ease-in-out infinite 1s' }} />
-        
-          <div className="absolute w-0.5 h-0.5 bg-white rounded-full" style={{ top: '10%', right: '10%', animation: 'twinkle 2s ease-in-out infinite 1.5s' }} />
-          <div className="absolute w-2.5 h-2.5 rounded-full" style={{ top: '10%', right: '10%', transform: 'translate(-1px, -1px)', background: 'radial-gradient(#8A2BE2, transparent 70%)', opacity: 0.7, animation: 'coloredHalo 2s ease-in-out infinite 1.5s' }} />
-
-          <div className="absolute w-0.5 h-0.5 bg-white rounded-full" style={{ top: '80%', left: '15%', animation: 'twinkle 6s ease-in-out infinite 2s' }} />
-          <div className="absolute w-2.5 h-2.5 rounded-full" style={{ top: '80%', left: '15%', transform: 'translate(-1px, -1px)', background: 'radial-gradient(#00FFFF, transparent 70%)', opacity: 0.7, animation: 'coloredHalo 6s ease-in-out infinite 2s' }} />
+          {/* Purple Stars */}
+          <div className="absolute text-lg" style={{ top: '25%', right: '25%', textShadow: '0 0 10px #a855f7', animation: 'starTwinkle 5s ease-in-out infinite 0.5s' }}>✦</div>
+          <div className="absolute text-xl" style={{ top: '80%', left: '20%', textShadow: '0 0 12px #a855f7', animation: 'starTwinkle 4.5s ease-in-out infinite 2s' }}>✦</div>
+          
+          {/* Small Background Stars */}
+          <div className="absolute text-sm" style={{ top: '40%', left: '10%', textShadow: '0 0 8px #ffffff', animation: 'starTwinkle 3s ease-in-out infinite 1.5s' }}>✦</div>
+          <div className="absolute text-sm" style={{ top: '15%', right: '40%', textShadow: '0 0 8px #ffffff', animation: 'starTwinkle 5.5s ease-in-out infinite 0.8s' }}>✦</div>
         </div>
 
       </div>
@@ -262,11 +217,14 @@ function App() {
             />
 
             <header className="text-center w-full max-w-2xl mb-10 mt-4 relative z-10">
-              <h1 className="text-6xl font-black tracking-tighter mb-4 bg-gradient-to-r from-blue-500 to-purple-600 bg-clip-text text-transparent drop-shadow-sm">
+              <h1 
+                className="text-6xl font-black tracking-tighter mb-4 text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-purple-500 drop-shadow-sm"
+                style={{ filter: darkMode ? 'drop-shadow(0px 0px 20px rgba(168, 85, 247, 0.4))' : 'none' }}
+              >
                 SyllabiXtract
               </h1>
-              <p className={`text-lg font-medium max-w-md text-center leading-relaxed mx-auto
-                ${darkMode ? 'text-slate-400' : 'text-slate-600'}`}>
+              <p className={`text-lg font-medium max-w-md text-center leading-relaxed mx-auto drop-shadow-sm
+                ${darkMode ? 'text-slate-100' : 'text-slate-700'}`}>
                 Convert your messy syllabus into an organized calendar in seconds.
               </p>
             </header>
