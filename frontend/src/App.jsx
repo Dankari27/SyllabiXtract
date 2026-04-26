@@ -5,10 +5,15 @@ import ThemeToggle from './components/ThemeToggle';
 import LandingPage from './components/LandingPage';
 import ProfileDropdown from './components/ProfileDropdown';
 import UploadCard from './components/UploadCard';
-import ResultsPanel from './components/ResultsPanel';
+import ReviewModal from './components/ReviewModal'; // New Import
 
+/**
+ * SyllabiXtract Main Application
+ * Handles Auth0 authentication, file uploads to Render, 
+ * and triggers the Review Modal for AI data verification.
+ */
 function App() {
-  // 1. Initialize Auth0 Hooks
+  // 1. Auth0 Hooks
   const { 
     loginWithRedirect, 
     logout, 
@@ -16,17 +21,19 @@ function App() {
     isAuthenticated, 
     isLoading, 
     getAccessTokenSilently,
-    error // <--- ADD THIS HERE
+    error 
   } = useAuth0();
 
   const { darkMode, toggleTheme } = useTheme();
   
+  // 2. Application State
   const [displayProfileDropdown, setdisplayProfileDropdown] = useState(false); 
   const [file, setFile] = useState(null);
   const [uploadStatus, setUploadStatus] = useState(false);
   const [extractedData, setExtractedData] = useState(null);
+  const [isReviewOpen, setIsReviewOpen] = useState(false); // Controls the Modal
 
-  // Capture the file from the input
+  // Handle file selection
   const handleFileChange = (event) => {
     const selectedFile = event.target.files[0];
     if (selectedFile && selectedFile.type === "application/pdf") {
@@ -36,7 +43,7 @@ function App() {
     }
   };
 
-  // Ship the file to the backend WITH the Auth0 Token
+  // Upload to Render Backend
   const handleUpload = async () => {
     if (!file) {
       alert("Select a syllabus first!");
@@ -48,10 +55,8 @@ function App() {
     formData.append('file', file);
 
     try {
-      // 2. Silently grab the VIP JWT token from Auth0
       const token = await getAccessTokenSilently();
 
-      // 3. Attach the token to the Authorization header
       const response = await fetch('https://syllabixtract-api.onrender.com/upload', {
         method: 'POST',
         headers: {
@@ -63,7 +68,13 @@ function App() {
       if (!response.ok) throw new Error('Backend upload failed');
 
       const data = await response.json();
-      setExtractedData(data); 
+      
+      // The backend returns the Gemini JSON inside the 'events' key
+      setExtractedData(data.events); 
+      
+      // Open the Review Modal immediately
+      setIsReviewOpen(true); 
+
     } catch (error) {
       console.error("Upload Error:", error);
       alert("Failed to reach the backend. Check console for details.");
@@ -78,19 +89,25 @@ function App() {
     if (input) input.value = '';
   }
 
-  // Show a blank or loading screen while Auth0 checks the user's status
- if (isLoading) {
+  // Loading State
+  if (isLoading) {
     return <div className={`min-h-screen w-full ${darkMode ? 'bg-[#0f172a]' : 'bg-white'}`}></div>;
   }
 
-  // ADD THIS BLOCK:
+  // Auth0 Error State
   if (error) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen p-10 text-center">
-        <h1 className="text-4xl font-black text-red-500 mb-4">Auth0 Silent Error Caught!</h1>
+        <h1 className="text-4xl font-black text-red-500 mb-4">Authentication Error</h1>
         <p className="text-xl font-mono bg-red-100 text-red-800 p-4 rounded-xl border border-red-300">
           {error.message}
         </p>
+        <button 
+          onClick={() => window.location.reload()}
+          className="mt-6 bg-slate-800 text-white px-6 py-2 rounded-full font-bold"
+        >
+          Retry Login
+        </button>
       </div>
     );
   }
@@ -100,7 +117,7 @@ function App() {
       
       <div className="relative z-10 w-full flex flex-col items-center py-12 px-4">
 
-        {/* 4. Display Landing Page if NOT authenticated */}
+        {/* LANDING PAGE: Shown if not logged in */}
         {!isAuthenticated && (
           <>
             <div className="absolute top-4 right-4 z-50">
@@ -123,17 +140,15 @@ function App() {
           </>
         )}
 
-        {/* 5. Display Dashboard if authenticated */}
+        {/* DASHBOARD: Shown if logged in */}
         {isAuthenticated && (
           <div className="w-full flex flex-col items-center animate-in fade-in duration-500">
 
             <ProfileDropdown
               darkMode={darkMode}
-              // Safely grab the user's name from their Auth0 profile
               userName={user?.nickname || user?.name || user?.email || "User"}
               displayProfileDropdown={displayProfileDropdown}
               setdisplayProfileDropdown={setdisplayProfileDropdown}
-              // Hook up the official Auth0 logout
               resetUserSession={() => logout({ logoutParams: { returnTo: window.location.origin } })}
             />
 
@@ -156,14 +171,20 @@ function App() {
               onremoveSelectedFile={removeSelectedFile}
             />
 
-            <ResultsPanel darkMode={darkMode} data={extractedData} />
+            {/* The Review Modal (The "Overlay") */}
+            <ReviewModal 
+              isOpen={isReviewOpen} 
+              onClose={() => setIsReviewOpen(false)} 
+              data={extractedData} 
+              darkMode={darkMode} 
+            />
 
           </div>
         )}
 
       </div>
 
-      {/* Background Styling */}
+      {/* Dynamic Background */}
       <div
         className="absolute inset-0 z-0 transition-colors duration-500"
         style={{
