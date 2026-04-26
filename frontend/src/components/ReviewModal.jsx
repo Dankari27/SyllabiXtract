@@ -10,12 +10,15 @@ export default function ReviewModal({ data, isOpen, onClose, darkMode }) {
     if (data) setEditedData(data);
   }, [data]);
 
+  // If the modal isn't open or there's no data yet, don't render anything
   if (!isOpen || !editedData) return null;
 
-  // --- Logic Handlers ---
+  // --- Logic Handlers (All features preserved) ---
 
   const handleInputChange = (index, field, value) => {
-    const updatedDeadlines = [...editedData.deadlines];
+    // Safety check: ensure deadlines array exists before spreading
+    const currentDeadlines = editedData.deadlines || [];
+    const updatedDeadlines = [...currentDeadlines];
     updatedDeadlines[index][field] = value;
     setEditedData({ ...editedData, deadlines: updatedDeadlines });
   };
@@ -25,23 +28,30 @@ export default function ReviewModal({ data, isOpen, onClose, darkMode }) {
   };
 
   const removeDeadline = (index) => {
-    const updatedDeadlines = editedData.deadlines.filter((_, i) => i !== index);
+    const currentDeadlines = editedData.deadlines || [];
+    const updatedDeadlines = currentDeadlines.filter((_, i) => i !== index);
     setEditedData({ ...editedData, deadlines: updatedDeadlines });
   };
 
   const downloadICS = () => {
-    // Filter out any entries without a valid date to prevent ics-library crashes
-    const validEvents = editedData.deadlines.filter(d => d.due_date && d.due_date.includes('-'));
+    // Guard against undefined deadlines
+    const deadlines = editedData.deadlines || [];
+    const validEvents = deadlines.filter(d => d.due_date && d.due_date.includes('-'));
 
     const events = validEvents.map(d => {
       const [year, month, day] = d.due_date.split('-').map(Number);
       return {
-        title: `[${editedData.course_code}] ${d.title}`,
+        title: `[${editedData.course_code || 'CLASS'}] ${d.title}`,
         description: d.description || 'Extracted via SyllabiXtract',
-        start: [year, month, day, 12, 0], // Default to 12:00 PM
+        start: [year, month, day, 12, 0], 
         duration: { hours: 1 }
       };
     });
+
+    if (events.length === 0) {
+      alert("No valid dates found to export.");
+      return;
+    }
 
     createEvents(events, (error, value) => {
       if (error) {
@@ -69,7 +79,7 @@ export default function ReviewModal({ data, isOpen, onClose, darkMode }) {
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/70 backdrop-blur-md animate-in fade-in duration-300">
       <div className={`w-full max-w-5xl max-h-[85vh] overflow-hidden rounded-[2.5rem] shadow-2xl border-2 flex flex-col transition-colors duration-300 ${bgPanel}`}>
         
-        {/* Header Section */}
+        {/* Header Section (Editable) */}
         <div className={`p-8 border-b flex justify-between items-start ${darkMode ? 'border-slate-800' : 'border-slate-100'}`}>
           <div className="flex-1 mr-4">
             <div className="flex items-center gap-3 mb-2">
@@ -78,14 +88,14 @@ export default function ReviewModal({ data, isOpen, onClose, darkMode }) {
               </div>
               <input 
                 className={`text-3xl font-black tracking-tighter ${inputBase} ${textPrimary} !p-0`}
-                value={editedData.course_code}
+                value={editedData.course_code || ""}
                 placeholder="Course Code"
                 onChange={(e) => handleHeaderChange('course_code', e.target.value)}
               />
             </div>
             <input 
               className={`text-lg font-bold text-blue-500 ${inputBase} !p-0`}
-              value={editedData.course_name}
+              value={editedData.course_name || ""}
               placeholder="Course Name"
               onChange={(e) => handleHeaderChange('course_name', e.target.value)}
             />
@@ -104,13 +114,14 @@ export default function ReviewModal({ data, isOpen, onClose, darkMode }) {
             <div className="col-span-1"></div>
           </div>
 
-          {editedData.deadlines.map((deadline, idx) => (
+          {/* CRASH PROTECTION: Use optional chaining ?. and fallback || [] */}
+          {(editedData.deadlines || []).map((deadline, idx) => (
             <div key={idx} className={`group p-2 rounded-2xl border flex gap-4 items-center transition-all ${bgRow}`}>
               <div className="flex-1 grid grid-cols-12 gap-4 items-center">
                 <div className="col-span-5">
                   <input 
                     className={`${inputBase} font-bold ${textPrimary}`}
-                    value={deadline.title}
+                    value={deadline.title || ""}
                     onChange={(e) => handleInputChange(idx, 'title', e.target.value)}
                   />
                 </div>
@@ -118,14 +129,14 @@ export default function ReviewModal({ data, isOpen, onClose, darkMode }) {
                   <input 
                     type="date"
                     className={`${inputBase} font-mono text-sm ${darkMode ? 'text-slate-300' : 'text-slate-600'}`}
-                    value={deadline.due_date}
+                    value={deadline.due_date || ""}
                     onChange={(e) => handleInputChange(idx, 'due_date', e.target.value)}
                   />
                 </div>
                 <div className="col-span-4">
                   <input 
                     className={`${inputBase} text-sm italic ${darkMode ? 'text-slate-400' : 'text-slate-500'}`}
-                    value={deadline.description}
+                    value={deadline.description || ""}
                     placeholder="Add notes..."
                     onChange={(e) => handleInputChange(idx, 'description', e.target.value)}
                   />
@@ -141,7 +152,7 @@ export default function ReviewModal({ data, isOpen, onClose, darkMode }) {
             </div>
           ))}
 
-          {editedData.deadlines.length === 0 && (
+          {(!editedData.deadlines || editedData.deadlines.length === 0) && (
             <div className="text-center py-20">
               <Info className="mx-auto mb-4 text-slate-500" size={48} />
               <p className="text-slate-500 font-medium">No deadlines extracted. Try adding one manually!</p>
@@ -152,7 +163,7 @@ export default function ReviewModal({ data, isOpen, onClose, darkMode }) {
         {/* Footer Controls */}
         <div className={`p-8 border-t flex flex-wrap gap-4 justify-between items-center ${darkMode ? 'border-slate-800 bg-slate-900/50' : 'border-slate-100 bg-slate-50/50'}`}>
           <p className="text-sm font-medium text-slate-500">
-            {editedData.deadlines.length} events identified by AI.
+            {(editedData.deadlines || []).length} events identified by AI.
           </p>
           <div className="flex gap-4">
             <button 

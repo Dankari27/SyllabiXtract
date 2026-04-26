@@ -5,15 +5,9 @@ import ThemeToggle from './components/ThemeToggle';
 import LandingPage from './components/LandingPage';
 import ProfileDropdown from './components/ProfileDropdown';
 import UploadCard from './components/UploadCard';
-import ReviewModal from './components/ReviewModal'; // New Import
+import ReviewModal from './components/ReviewModal';
 
-/**
- * SyllabiXtract Main Application
- * Handles Auth0 authentication, file uploads to Render, 
- * and triggers the Review Modal for AI data verification.
- */
 function App() {
-  // 1. Auth0 Hooks
   const { 
     loginWithRedirect, 
     logout, 
@@ -26,14 +20,12 @@ function App() {
 
   const { darkMode, toggleTheme } = useTheme();
   
-  // 2. Application State
   const [displayProfileDropdown, setdisplayProfileDropdown] = useState(false); 
   const [file, setFile] = useState(null);
   const [uploadStatus, setUploadStatus] = useState(false);
   const [extractedData, setExtractedData] = useState(null);
-  const [isReviewOpen, setIsReviewOpen] = useState(false); // Controls the Modal
+  const [isReviewOpen, setIsReviewOpen] = useState(false);
 
-  // Handle file selection
   const handleFileChange = (event) => {
     const selectedFile = event.target.files[0];
     if (selectedFile && selectedFile.type === "application/pdf") {
@@ -43,7 +35,6 @@ function App() {
     }
   };
 
-  // Upload to Render Backend
   const handleUpload = async () => {
     if (!file) {
       alert("Select a syllabus first!");
@@ -69,15 +60,17 @@ function App() {
 
       const data = await response.json();
       
-      // The backend returns the Gemini JSON inside the 'events' key
-      setExtractedData(data.events); 
-      
-      // Open the Review Modal immediately
-      setIsReviewOpen(true); 
+      // CRITICAL FIX: Ensure data.events exists and contains the deadlines
+      if (data && data.events) {
+        setExtractedData(data.events); 
+        setIsReviewOpen(true); 
+      } else {
+        throw new Error("AI returned an empty or invalid schedule.");
+      }
 
     } catch (error) {
       console.error("Upload Error:", error);
-      alert("Failed to reach the backend. Check console for details.");
+      alert("Failed to process syllabus. Error: " + error.message);
     } finally {
       setUploadStatus(false);
     }
@@ -89,12 +82,10 @@ function App() {
     if (input) input.value = '';
   }
 
-  // Loading State
   if (isLoading) {
     return <div className={`min-h-screen w-full ${darkMode ? 'bg-[#0f172a]' : 'bg-white'}`}></div>;
   }
 
-  // Auth0 Error State
   if (error) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen p-10 text-center">
@@ -117,7 +108,6 @@ function App() {
       
       <div className="relative z-10 w-full flex flex-col items-center py-12 px-4">
 
-        {/* LANDING PAGE: Shown if not logged in */}
         {!isAuthenticated && (
           <>
             <div className="absolute top-4 right-4 z-50">
@@ -140,7 +130,6 @@ function App() {
           </>
         )}
 
-        {/* DASHBOARD: Shown if logged in */}
         {isAuthenticated && (
           <div className="w-full flex flex-col items-center animate-in fade-in duration-500">
 
@@ -171,7 +160,6 @@ function App() {
               onremoveSelectedFile={removeSelectedFile}
             />
 
-            {/* The Review Modal (The "Overlay") */}
             <ReviewModal 
               isOpen={isReviewOpen} 
               onClose={() => setIsReviewOpen(false)} 
@@ -184,7 +172,6 @@ function App() {
 
       </div>
 
-      {/* Dynamic Background */}
       <div
         className="absolute inset-0 z-0 transition-colors duration-500"
         style={{
