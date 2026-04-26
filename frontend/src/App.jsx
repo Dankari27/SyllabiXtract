@@ -5,7 +5,7 @@ import ThemeToggle from './components/ThemeToggle';
 import LandingPage from './components/LandingPage';
 import ProfileDropdown from './components/ProfileDropdown';
 import UploadCard from './components/UploadCard';
-import ReviewModal from './components/ReviewModal';
+import SyllabusCalendar from './components/SyllabusCalendar';
 
 function App() {
   const { 
@@ -24,7 +24,6 @@ function App() {
   const [file, setFile] = useState(null);
   const [uploadStatus, setUploadStatus] = useState(false);
   const [extractedData, setExtractedData] = useState(null);
-  const [isReviewOpen, setIsReviewOpen] = useState(false);
 
   const handleFileChange = (event) => {
     const selectedFile = event.target.files[0];
@@ -63,7 +62,6 @@ function App() {
       // CRITICAL FIX: Ensure data.events exists and contains the deadlines
       if (data && data.events) {
         setExtractedData(data.events); 
-        setIsReviewOpen(true); 
       } else {
         throw new Error("AI returned an empty or invalid schedule.");
       }
@@ -160,12 +158,13 @@ function App() {
               onremoveSelectedFile={removeSelectedFile}
             />
 
-            <ReviewModal 
-              isOpen={isReviewOpen} 
-              onClose={() => setIsReviewOpen(false)} 
-              data={extractedData} 
-              darkMode={darkMode} 
-            />
+            {/* Replaced ReviewModal with the new SyllabusCalendar */}
+            {extractedData && (
+              <SyllabusCalendar 
+                data={extractedData} 
+                darkMode={darkMode} 
+              />
+            )}
 
           </div>
         )}
