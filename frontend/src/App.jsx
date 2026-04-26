@@ -80,7 +80,7 @@ function App() {
   }
 
   if (isLoading) {
-    return <div className={`min-h-screen w-full ${darkMode ? 'bg-[#101524]' : 'bg-slate-50'}`}></div>;
+    return <div className={`min-h-screen w-full ${darkMode ? 'bg-[#0f172a]' : 'bg-white'}`}></div>;
   }
 
   if (error) {
@@ -104,12 +104,12 @@ function App() {
     <div className="min-h-screen w-full relative flex flex-col items-center font-sans overflow-x-hidden">
       
       {/*
-        WAVY AURORA BACKGROUND
-        Uses stretched ellipses to create ribbons of light.
+        GLOWING & ANIMATED AURORA BACKGROUND
       */}
-      <div className={`fixed inset-0 z-0 transition-colors duration-1000 overflow-hidden ${darkMode ? 'bg-[#0b101e]' : 'bg-slate-100'}`}>
+      <div className={`fixed inset-0 z-0 transition-colors duration-1000 ${darkMode ? 'bg-[#080c18]' : 'bg-slate-100'}`}>
         
         <style>{`
+          /* Large sweeping motions to make the aurora meld */
           @keyframes waveLeft {
             0%, 100% { transform: rotate(-15deg) translateY(0) scaleY(1); }
             50% { transform: rotate(-10deg) translateY(-5vh) scaleY(1.2); }
@@ -123,20 +123,21 @@ function App() {
             50% { opacity: 0.2; transform: scale(0.7); filter: brightness(0.5); }
           }
         `}</style>
-
-        {/* Base dark/light gradient */}
+        
+        {/* Main, layered central background */}
         <div 
           className="absolute inset-0 z-0 pointer-events-none"
           style={{
             background: darkMode 
               ? 'radial-gradient(ellipse at top, rgba(11, 16, 30, 0) 0%, rgba(8, 12, 24, 1) 100%)'
               : 'radial-gradient(ellipse at top, rgba(241, 245, 249, 0) 0%, rgba(226, 232, 240, 1) 100%)',
+            backgroundSize: '100% 100%',
           }}
         />
 
         {/* Ribbon 1: Cyan Wave (Left) */}
         <div 
-          className="absolute pointer-events-none rounded-[100%]"
+          className={`absolute rounded-[100%] pointer-events-none transition-all duration-1000`} 
           style={{
             top: '20%',
             left: '-30%',
@@ -151,7 +152,7 @@ function App() {
 
         {/* Ribbon 2: Purple Wave (Right/Center) */}
         <div 
-          className="absolute pointer-events-none rounded-[100%]"
+          className={`absolute rounded-[100%] pointer-events-none transition-all duration-1000`} 
           style={{
             top: '35%',
             right: '-20%',
@@ -164,7 +165,7 @@ function App() {
           }}
         />
 
-        {/* Layer 3: Distant Diamond Stars */}
+        {/* Layer 3: Distant Twinkling Starfield with Colored Halos */}
         <div className="absolute inset-0 z-0 pointer-events-none select-none text-white font-serif">
           {/* Cyan Stars */}
           <div className="absolute text-xl" style={{ top: '12%', left: '15%', textShadow: '0 0 10px #00FFFF', animation: 'starTwinkle 4s ease-in-out infinite' }}>✦</div>
