@@ -3,25 +3,27 @@ import { format, startOfMonth, endOfMonth, startOfWeek, endOfWeek, eachDayOfInte
 import { Maximize2, X, ChevronLeft, ChevronRight, Save, Download, Trash2, Calendar as CalIcon, GripVertical } from 'lucide-react';
 import { createEvents } from 'ics';
 
-// Atmospheric Glowing Starfield Component
+// Atmospheric Glowing & Drifting Starfield
 const Starfield = ({ darkMode }) => {
-  // Generate 50 random stars once on mount
+  // Generate random stars once on mount
   const [stars] = useState(() => 
-    Array.from({ length: 50 }).map(() => {
+    Array.from({ length: 60 }).map(() => {
       const sizeVal = Math.random() * 2 + 1; // 1px to 3px
       const glowCore = sizeVal * 3;
       const glowHalo = sizeVal * 6;
       
       return {
         id: Math.random(),
-        top: `${Math.random() * 100}%`,
         left: `${Math.random() * 100}%`,
         size: `${sizeVal}px`,
-        delay: `${Math.random() * 4}s`,
-        duration: `${Math.random() * 3 + 2}s`, // 2s to 5s
-        // Layered box-shadow: tight white core + wide blue/cyan halo should create bloom
+        // Drifting parameters
+        driftDuration: `${Math.random() * 20 + 20}s`, // 20s to 40s to float to the top
+        driftDelay: `-${Math.random() * 40}s`, // Negative delay pre-distributes them on screen
+        // Twinkling parameters
+        pulseDuration: `${Math.random() * 4 + 2}s`, // 2s to 6s twinkle cycle
+        pulseDelay: `-${Math.random() * 5}s`,
+        // Layered box-shadow: tight white core + wide blue/cyan halo
         boxShadow: `0 0 ${glowCore}px ${sizeVal}px rgba(255, 255, 255, 0.9), 0 0 ${glowHalo}px ${sizeVal * 2}px rgba(96, 165, 250, 0.6)`,
-        opacity: Math.random() * 0.6 + 0.4, // 0.4 to 1.0 opacity base
       };
     })
   );
@@ -29,25 +31,35 @@ const Starfield = ({ darkMode }) => {
   if (!darkMode) return null; // Only render stars in dark mode
 
   return (
-    <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
+    <div className="absolute inset-0 overflow-hidden pointer-events-none z-0 rounded-[2.5rem]">
+      <style>{`
+        @keyframes driftUp {
+          0% { top: 110%; }
+          100% { top: -10%; }
+        }
+        @keyframes deepTwinkle {
+          0%, 100% { opacity: 1; transform: scale(1); }
+          50% { opacity: 0.05; transform: scale(0.8); } /* Dips extremely dark to emphasize the glow */
+        }
+      `}</style>
       {stars.map((star) => (
         <div
           key={star.id}
-          className="absolute rounded-full bg-white animate-pulse"
+          className="absolute rounded-full bg-white"
           style={{
-            top: star.top,
             left: star.left,
             width: star.size,
             height: star.size,
-            animationDelay: star.delay,
-            animationDuration: star.duration,
             boxShadow: star.boxShadow,
-            opacity: star.opacity,
+            animation: `
+              driftUp ${star.driftDuration} linear ${star.driftDelay} infinite,
+              deepTwinkle ${star.pulseDuration} ease-in-out ${star.pulseDelay} infinite
+            `,
           }}
         />
       ))}
-      {/* Subtle deep space radial gradient */}
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-blue-900/20 via-slate-900/40 to-transparent"></div>
+      {/* Subtle deep space radial gradient overlay */}
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-blue-900/20 via-slate-900/60 to-slate-900/90"></div>
     </div>
   );
 };
@@ -165,7 +177,6 @@ export default function SyllabusCalendar({ data, darkMode }) {
     ? 'bg-slate-900/30 text-slate-500 border-slate-800/50' 
     : 'bg-slate-100/30 text-slate-400 border-slate-200/30';
   
-  // Applied to both the main grid wrapper and the individual day boxes
   const modernScrollbar = `
     [&::-webkit-scrollbar]:w-2
     [&::-webkit-scrollbar-track]:bg-transparent 
@@ -174,15 +185,13 @@ export default function SyllabusCalendar({ data, darkMode }) {
                : '[&::-webkit-scrollbar-thumb]:bg-slate-300/80 hover:[&::-webkit-scrollbar-thumb]:bg-slate-400/80'}
   `;
 
-  // VIEW 1: THE MINI PREVIEW
+  // VIEW 1: THE MINI PREVIEW (NO STARS)
   if (!isExpanded) {
     return (
       <div 
         onClick={() => setIsExpanded(true)}
         className={`w-full max-w-2xl mt-8 rounded-3xl border cursor-pointer transition-all duration-300 hover:scale-[1.02] overflow-hidden group relative ${bgGlass}`}
       >
-        <Starfield darkMode={darkMode} />
-        
         <div className={`relative z-10 p-5 border-b flex justify-between items-center ${darkMode ? 'border-slate-700/50 bg-slate-800/30' : 'border-white/40 bg-white/40'}`}>
           <div>
             <h3 className={`font-black flex items-center gap-2 text-lg ${textMain}`}>
@@ -222,11 +231,12 @@ export default function SyllabusCalendar({ data, darkMode }) {
     );
   }
 
-  // VIEW 2: THE FULL CALENDAR MODAL
+  // VIEW 2: THE FULL CALENDAR MODAL (WITH STARS)
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-in fade-in duration-300">
       <div className={`relative w-full max-w-6xl h-[90vh] flex flex-col rounded-[2.5rem] overflow-hidden ring-1 ring-white/20 ${bgGlass}`}>
         
+        {/* The Atmospheric Starfield Background */}
         <Starfield darkMode={darkMode} />
 
         {/* Artistic Glass Header */}
@@ -255,7 +265,7 @@ export default function SyllabusCalendar({ data, darkMode }) {
           </button>
         </div>
 
-        {/* Calendar Grid Container (Now with the modern scrollbar) */}
+        {/* Calendar Grid Container */}
         <div className={`relative z-10 flex-1 overflow-y-auto p-6 pr-4 ${modernScrollbar} ${darkMode ? 'bg-slate-900/40' : 'bg-slate-50/20'}`}>
           <div className="grid grid-cols-7 gap-3 h-full">
             {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day, i) => (
