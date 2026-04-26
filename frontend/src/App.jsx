@@ -1,38 +1,31 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
+import { useAuth0 } from '@auth0/auth0-react';
 import useTheme from './hooks/useTheme';
 import ThemeToggle from './components/ThemeToggle';
 import LandingPage from './components/LandingPage';
-import AuthCard from './components/AuthCard';
 import ProfileDropdown from './components/ProfileDropdown';
 import UploadCard from './components/UploadCard';
 import ResultsPanel from './components/ResultsPanel';
-/**
- * SyllabiXtract Starter Template
- * This component handles:
- * 1. File selection (PDF only)
- * 2. Uploading to the backend on Render for testing
- * 3. Displaying the raw JSON response from Vercel
- */
+
 function App() {
-  const [authMode, setAuthMode] = useState('login');
+  // 1. Initialize Auth0 Hooks
+  const { 
+    loginWithRedirect, 
+    logout, 
+    user, 
+    isAuthenticated, 
+    isLoading, 
+    getAccessTokenSilently 
+  } = useAuth0();
+
   const { darkMode, toggleTheme } = useTheme();
-  const [userName, setUserName] = useState(""); 
+  
   const [displayProfileDropdown, setdisplayProfileDropdown] = useState(false); 
-  const [activePage, setactivePage] = useState('landing');
   const [file, setFile] = useState(null);
   const [uploadStatus, setUploadStatus] = useState(false);
   const [extractedData, setExtractedData] = useState(null);
 
-  useEffect(() => {
-    const savedName = localStorage.getItem('sx_userName');
-    if (savedName) {
-      setUserName(savedName);
-      setExtractedData(null);
-      setFile(null);
-      setactivePage('app');
-    }
-  }, []);
-  // 1. Capture the file from the input
+  // Capture the file from the input
   const handleFileChange = (event) => {
     const selectedFile = event.target.files[0];
     if (selectedFile && selectedFile.type === "application/pdf") {
@@ -42,7 +35,7 @@ function App() {
     }
   };
 
-  // Ship the file to the backend
+  // Ship the file to the backend WITH the Auth0 Token
   const handleUpload = async () => {
     if (!file) {
       alert("Select a syllabus first!");
@@ -50,75 +43,58 @@ function App() {
     }
 
     setUploadStatus(true);
-
     const formData = new FormData();
     formData.append('file', file);
 
     try {
+      // 2. Silently grab the VIP JWT token from Auth0
+      const token = await getAccessTokenSilently();
 
-      // This url allows render to deploy the backend.
+      // 3. Attach the token to the Authorization header
       const response = await fetch('https://syllabixtract-api.onrender.com/upload', {
         method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`
+        },
         body: formData,
       });
 
       if (!response.ok) throw new Error('Backend upload failed');
 
       const data = await response.json();
-      setExtractedData(data); // This is where Gemini's JSON will live
+      setExtractedData(data); 
     } catch (error) {
       console.error("Upload Error:", error);
-      alert("Failed to reach the backend. Is your Render server awake?");
+      alert("Failed to reach the backend. Check console for details.");
     } finally {
       setUploadStatus(false);
     }
   };
 
-  // Function call for successful login, sets uer info and navigation
-  function processLogin(name) {
-    localStorage.setItem('sx_userName', name);
-    localStorage.setItem('sx_displayName', name);
-    setExtractedData(null);
-    setFile(null);
-    setUserName(name);
-    setactivePage('app');
-  }
-
-  // Function call for clearing user data and reseting activePage or state
-  function resetUserSession() {
-    localStorage.removeItem('sx_userName');
-    setUserName("");
-    setactivePage('landing');
-    setdisplayProfileDropdown(false);
-    setExtractedData(null);
-    setFile(null);
-  }
-  // Function call for reseting file input and clearing file state
   function removeSelectedFile() {
     setFile(null);
-    // This resets the actual file input so the same file can be re-selected
     const input = document.getElementById('file-input');
     if (input) input.value = '';
   }
+
+  // Show a blank or loading screen while Auth0 checks the user's status
+  if (isLoading) {
+    return <div className={`min-h-screen w-full ${darkMode ? 'bg-[#0f172a]' : 'bg-white'}`}></div>;
+  }
+
   return (
     <div className="min-h-screen w-full relative flex flex-col items-center font-sans overflow-x-hidden">
-
-
-      {/* Layer for contnet */}
+      
       <div className="relative z-10 w-full flex flex-col items-center py-12 px-4">
 
-        {/* Controls current view of the app landing page*/}
-        {activePage === 'landing' && (
+        {/* 4. Display Landing Page if NOT authenticated */}
+        {!isAuthenticated && (
           <>
-            {/* Top-right Log In button */}
             <div className="absolute top-4 right-4 z-50">
               <button
-                onClick={() => {
-                  setAuthMode('login');
-                  setactivePage('auth');
-                }}
+                onClick={() => loginWithRedirect()}
                 className={`font-semibold px-6 py-2 rounded-full border transition
-          ${darkMode
+                  ${darkMode
                     ? 'border-white text-white hover:bg-white/10'
                     : 'border-slate-800 text-slate-800 hover:bg-slate-100'
                   }`}
@@ -129,34 +105,23 @@ function App() {
 
             <LandingPage
               darkMode={darkMode}
-              onGetStarted={() => {
-                setAuthMode('signup');
-                setactivePage('auth');
-              }}
+              onGetStarted={() => loginWithRedirect({ authorizationParams: { screen_hint: 'signup' } })}
             />
           </>
         )}
 
-        {/* Controls current view of the app authentication page*/}
-        {activePage === 'auth' && (
-          <AuthCard
-            darkMode={darkMode}
-            initialMode={authMode}
-            handleLogin={processLogin}
-            returnToLanding={() => setactivePage('landing')}
-          />
-        )}
-
-        {/* Controls current view of the main upload dashboard*/}
-        {activePage === 'app' && (
+        {/* 5. Display Dashboard if authenticated */}
+        {isAuthenticated && (
           <div className="w-full flex flex-col items-center animate-in fade-in duration-500">
 
             <ProfileDropdown
               darkMode={darkMode}
-              userName={userName}
+              // Safely grab the user's name from their Auth0 profile
+              userName={user?.nickname || user?.name || user?.email || "User"}
               displayProfileDropdown={displayProfileDropdown}
               setdisplayProfileDropdown={setdisplayProfileDropdown}
-              resetUserSession={resetUserSession}
+              // Hook up the official Auth0 logout
+              resetUserSession={() => logout({ logoutParams: { returnTo: window.location.origin } })}
             />
 
             <header className="text-center w-full max-w-2xl mb-10">
@@ -175,26 +140,17 @@ function App() {
               uploadStatus={uploadStatus}
               onFileChange={handleFileChange}
               onUpload={handleUpload}
-              onremoveSelectedFile={removeSelectedFile}  // ← add this
+              onremoveSelectedFile={removeSelectedFile}
             />
 
             <ResultsPanel darkMode={darkMode} data={extractedData} />
 
-            <button
-              onClick={() => setactivePage('landing')}
-              className={`mt-8 font-bold transition-colors
-                ${darkMode ? 'text-slate-500 hover:text-blue-400' : 'text-slate-400 hover:text-blue-500'}`}
-            >
-              ← Back to Landing Page
-            </button>
           </div>
         )}
 
       </div>
 
-      {/* Page background adapts to theme:
-      - Light mode has radial gradient
-      - Dark mode has solid slate */}
+      {/* Background Styling */}
       <div
         className="absolute inset-0 z-0 transition-colors duration-500"
         style={{
@@ -206,9 +162,7 @@ function App() {
         }}
       />
 
-      {/* A Floating theme toggle that will always be visible in each page */}
       <ThemeToggle darkMode={darkMode} switchTheme={toggleTheme} />
-
     </div>
   );
 }

@@ -1,10 +1,21 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
+import { Auth0Provider } from '@auth0/auth0-react'
 import './index.css'
 import App from './App.jsx'
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
-    <App />
+    <Auth0Provider
+      domain="dev-evpwqsgmn03lqsfk.us.auth0.com"
+      clientId="SeOofXeNJOUQSgA7uGbBnFSgl7pJhWej"
+      authorizationParams={{
+        redirect_uri: window.location.origin,
+        // This MUST match the audience in your Java backend exactly
+        audience: "https://api.syllabixtract.com" 
+      }}
+    >
+      <App />
+    </Auth0Provider>
   </StrictMode>,
 )
