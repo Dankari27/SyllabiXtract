@@ -3,18 +3,27 @@ import { format, startOfMonth, endOfMonth, startOfWeek, endOfWeek, eachDayOfInte
 import { Maximize2, X, ChevronLeft, ChevronRight, Save, Download, Trash2, Calendar as CalIcon, GripVertical } from 'lucide-react';
 import { createEvents } from 'ics';
 
-// Atmospheric Starfield Component
+// Atmospheric Glowing Starfield Component
 const Starfield = ({ darkMode }) => {
   // Generate 50 random stars once on mount
   const [stars] = useState(() => 
-    Array.from({ length: 50 }).map(() => ({
-      id: Math.random(),
-      top: `${Math.random() * 100}%`,
-      left: `${Math.random() * 100}%`,
-      size: `${Math.random() * 2 + 1}px`, // 1px to 3px
-      delay: `${Math.random() * 4}s`,
-      duration: `${Math.random() * 3 + 2}s`, // 2s to 5s
-    }))
+    Array.from({ length: 50 }).map(() => {
+      const sizeVal = Math.random() * 2 + 1; // 1px to 3px
+      const glowCore = sizeVal * 3;
+      const glowHalo = sizeVal * 6;
+      
+      return {
+        id: Math.random(),
+        top: `${Math.random() * 100}%`,
+        left: `${Math.random() * 100}%`,
+        size: `${sizeVal}px`,
+        delay: `${Math.random() * 4}s`,
+        duration: `${Math.random() * 3 + 2}s`, // 2s to 5s
+        // Layered box-shadow: tight white core + wide blue/cyan halo should create bloom
+        boxShadow: `0 0 ${glowCore}px ${sizeVal}px rgba(255, 255, 255, 0.9), 0 0 ${glowHalo}px ${sizeVal * 2}px rgba(96, 165, 250, 0.6)`,
+        opacity: Math.random() * 0.6 + 0.4, // 0.4 to 1.0 opacity base
+      };
+    })
   );
 
   if (!darkMode) return null; // Only render stars in dark mode
@@ -32,7 +41,8 @@ const Starfield = ({ darkMode }) => {
             height: star.size,
             animationDelay: star.delay,
             animationDuration: star.duration,
-            opacity: 0.7,
+            boxShadow: star.boxShadow,
+            opacity: star.opacity,
           }}
         />
       ))}
